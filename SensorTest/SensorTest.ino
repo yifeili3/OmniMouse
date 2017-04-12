@@ -2,7 +2,7 @@
 // Capacitive Pins: 0, 1, 7, 8, 14, 15, 16, 17,
 // 18, 19, 22, 23
 
-int sensorPins[] = {0,1,15,16,17,18,19,22};  //8 Sensors (No pads)
+int sensorPins[] = {0,1,18,15,16,17,19,23};  //8 Sensors: The order is scattered because of the board configuration
 int defVal[] = {0,0,0,0,0,0,0,0};
 
 typedef struct dir{
