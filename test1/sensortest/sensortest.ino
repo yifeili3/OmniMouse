@@ -35,6 +35,7 @@ void setup() {
   pinMode(13, OUTPUT);    //Set LED to output
   pinMode(buttonPin,INPUT_PULLUP);
   Serial.begin(9600);
+  Serial2.begin(9600);
   calibrate();
   Mouse.begin();
 }
@@ -83,16 +84,17 @@ void loop() {
 void printValues(Sensor * sensors, int num) {
   for(int i = 0; i < num; i++){
     Serial.print(sensors[i].CapacitiveReading);
-    printCS();
+    printCS(0);
   }
-  printLN();
+  printLN(0);
 }
 */
 void mouseAlgorithm(Sensor * sensors,bool * buttons){
     //mouse move
     bool activated=false;
     float angle = AngleCalculation(sensors,activated);
-    Serial.print(angle);printCS();
+    Serial.print(angle);printCS(0);
+    Serial2.print(angle);printCS(2);
     Direction mouseDir=getDirection(angle,activated);
     if(mouseDir.x!=0 || mouseDir.y!=0) Mouse.move(mouseDir.x,mouseDir.y);
     //TODO button control
@@ -117,8 +119,8 @@ Direction getDirection(float angle,bool activated){
     dir.x=UNIT*sin(angle);
     }
   }
-  //Serial.print(dir.x);printCS();
-  //Serial.print(dir.y);printCS();
+  Serial2.print(dir.x);printCS(2);
+  Serial2.print(dir.y);printCS(2);
   return dir;
 }
 
@@ -184,10 +186,16 @@ float Vote(sensor s1, sensor s2, float * degreeArray){
 
 float AngleCalculation(Sensor * sensors, bool & activated){
       printValues(sensors,8);
+      printValuesB(sensors,8);
+      
       TouchQueue res=findLargestThree(sensors);
-      Serial.print(res.s1.sensorNum);printCS();
-      Serial.print(res.s2.sensorNum);printCS();
-      Serial.print(res.s3.sensorNum);printCS();
+      Serial.print(res.s1.sensorNum);printCS(0);
+      Serial.print(res.s2.sensorNum);printCS(0);
+      Serial.print(res.s3.sensorNum);printCS(0);
+      
+      Serial2.print(res.s1.sensorNum);printCS(2);
+      Serial2.print(res.s2.sensorNum);printCS(2);
+      Serial2.print(res.s3.sensorNum);printCS(2);
       float angle=0.0;
       
       float degreeArray[8]={0.0,45.0,90.0,135.0,180.0,225.0,270.0,315.0};
@@ -211,16 +219,30 @@ float AngleCalculation(Sensor * sensors, bool & activated){
 void printValues(Sensor* sensors, int num) {
   for(int i = 0; i < num; i++){
     Serial.print(sensors[i].binaryReading);
-    printCS();
+    printCS(0);
   }
-  printLN();
+  printLN(0);
 }
 
-void printCS(){   //Print comma + space
-  Serial.print(", ");
+void printValuesB(Sensor* sensors, int num) {
+  for(int i = 0; i < num; i++){
+    Serial2.print(sensors[i].binaryReading);
+    printCS(2);
+  }
+  printLN(2);
 }
-void printLN(){   //Print newline
-  Serial.print("\n");
+
+void printCS(int arg){   //Print comma + space
+  if(arg==0)
+  Serial.print(", ");
+  else if(arg==2)
+  Serial2.print(", ");
+}
+void printLN(int arg){   //Print newline
+ if(arg==0)
+   Serial.print("\n");
+ else if(arg==2)
+   Serial2.print("\n");
 }
 
 
