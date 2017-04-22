@@ -2,9 +2,8 @@
 #define THRESHOLD 20
 #define UNIT 7.5
 #define RADIAN 57.2
-// Testing 8 Dot Sensor Configuration
+// 8 Dot Sensor Configuration
 // Capacitive Pins: 0, 1, 18, 15, 16, 17, 19, 23
-// 18, 19, 22, 23
 
 int sensorPins[] = {0,1,18,15,16,17,19,23};  //8 Sensors: The order is scattered because of the board configuration
 int defVal[] = {0,0,0,0,0,0,0,0};
@@ -70,12 +69,41 @@ void loop() {
   }
   bool buttonPressed=false;
   if(pushbutton.update()){
-   if(pushbutton.risingEdge()){
+    if(pushbutton.risingEdge()){
       buttonPressed=true;
-      Serial.print("------------");
-    } 
-   }
-  
+      if(sensors[2].binaryReading == true){
+        if(sensors[6].binaryReading == true){
+          Mouse.click(MOUSE_MIDDLE);
+          Serial.print("M");printCS(0);
+          Serial2.print("M");printCS(2);
+        }
+        else {
+        Mouse.click(MOUSE_LEFT);
+        Serial.print("L");printCS(0);
+        Serial2.print("L");printCS(2);
+        }
+      }
+    }
+    else if(sensors[6].binaryReading == true){
+      Mouse.click(MOUSE_RIGHT);
+      Serial.print("R");printCS(0);
+      Serial2.print("R");printCS(2);
+    }
+    else if(sensors[0].binaryReading == true){
+      Mouse.move(0, 0, 3);
+      Serial.print("U");printCS(0);
+      Serial2.print("U");printCS(2);
+    }
+    else if(sensors[4].binaryReading == true){
+      Mouse.move(0, 0, -3);
+      Serial.print("D");printCS(0);
+      Serial2.print("D");printCS(2);
+    }
+    else{
+      Serial.print("0");printCS(0);
+      Serial2.print("0");printCS(2);
+    }
+  }
   //printValues(sensors,8);
   mouseAlgorithm(sensors,buttons);
   delay(20);
