@@ -34,7 +34,7 @@ void setup() {
   pinMode(13, OUTPUT);    //Set LED to output
   pinMode(buttonPin,INPUT_PULLUP);
   Serial.begin(38400);
-  Serial2.begin(57600);
+  Serial2.begin(38400);
   calibrate();
   Mouse.begin();
 }
@@ -73,30 +73,35 @@ void loop() {
         if(sensors[6].binaryReading == true){
           Mouse.click(MOUSE_MIDDLE);
           Serial.print("M");printCS(0);
-          Serial2.print("M");printCS(2);
+          Serial2.print("M");
         }
         else {
         Mouse.click(MOUSE_LEFT);
         Serial.print("L");printCS(0);
-        Serial2.print("L");printCS(2);
+        Serial2.print("L");
         }
       }
       else if(sensors[6].binaryReading == true){
         Mouse.click(MOUSE_RIGHT);
         Serial.print("R");printCS(0);
-        Serial2.print("R");printCS(2);
+        Serial2.print("R");
       }
       else if(sensors[0].binaryReading == true){
         Mouse.move(0, 0, 3);
         buttonType = 1;
         Serial.print("U");printCS(0);
-        Serial2.print("U");printCS(2);
+        Serial2.print("U");
       }
       else if(sensors[4].binaryReading == true){
         Mouse.move(0, 0, -3);
         buttonType = 2;
         Serial.print("D");printCS(0);
-        Serial2.print("D");printCS(2);
+        Serial2.print("D");
+      }
+      else {
+        Mouse.click(MOUSE_LEFT);
+        Serial.print("L");printCS(0);
+        Serial2.print("L");
       }
     }
     else {
@@ -119,58 +124,6 @@ void loop() {
       Serial2.print("0");printCS(2);
     }
   }
-  /*
-  if(pushbutton.update()){
-    if(pushbutton.risingEdge()){
-      if((sensors[2].binaryReading == true) && (sensors[6].binaryReading == true)){
-          Mouse.click(MOUSE_MIDDLE);
-          Serial.print("M");printCS(0);
-          Serial2.print("M");printCS(2);
-      }
-      else if(sensors[2].binaryReading == true){
-        Mouse.click(MOUSE_LEFT);
-        Serial.print("L");printCS(0);
-        Serial2.print("L");printCS(2);
-      }
-      else if(sensors[6].binaryReading == true){
-        Mouse.click(MOUSE_RIGHT);
-        Serial.print("R");printCS(0);
-        Serial2.print("R");printCS(2);
-      }
-      else if(sensors[0].binaryReading == true){
-        Mouse.move(0, 0, 3);
-        buttonType = 1;
-        Serial.print("U");printCS(0);
-        Serial2.print("U");printCS(2);
-      }
-      else if(sensors[4].binaryReading == true){
-        Mouse.move(0, 0, -3);
-        buttonType = 2;
-        Serial.print("D");printCS(0);
-        Serial2.print("D");printCS(2);
-      }
-    }
-    else {
-      buttonType = 0;
-      Serial.println("RELEASED---");
-    }
-  }
-  else {
-    if(buttonType == 1){
-      Mouse.move(0, 0, 3);
-      Serial.print("U");printCS(0);
-      Serial2.print("U");printCS(2);
-    }
-    else if(buttonType == 2){
-      Mouse.move(0, 0, -3);
-      Serial.print("D");printCS(0);
-      Serial2.print("D");printCS(2);
-    }
-    else {
-      Serial.print("0");printCS(0);
-      Serial2.print("0");printCS(2); 
-    }
-  }*/
   mouseAlgorithm(sensors,buttons);
   delay(16);
 }
@@ -314,3 +267,6 @@ void printLN(int arg){   //Print newline
  else if(arg==2)
    Serial2.print("\n");
 }
+
+
+
