@@ -1,4 +1,6 @@
 #include <Bounce.h>
+#include <math.h>
+
 #define THRESHOLD 20
 #define UNIT 7.5
 #define RADIAN 57.2
@@ -9,8 +11,13 @@ int sensorPins[] = {0,1,18,15,16,17,19,23};  //8 Sensors: The order is scattered
 int defVal[] = {0,0,0,0,0,0,0,0};
 
 int buttonPin=2;
-int debounceTime=10;
+int debounceTime=5;
 Bounce pushbutton=Bounce(buttonPin,debounceTime);
+
+bool btConn = false;
+char butIn = '0';
+/*unsigned long startTime = 0;
+int packets = 0;*/
 
 typedef struct dir{
   float x;
@@ -34,9 +41,10 @@ void setup() {
   pinMode(13, OUTPUT);    //Set LED to output
   pinMode(buttonPin,INPUT_PULLUP);
   Serial.begin(38400);
-  Serial2.begin(38400);
+  Serial2.begin(9600);
   calibrate();
   Mouse.begin();
+  //startTime = millis();
 }
 
 void calibrate() {  // Calibrate the ambient capacitance values for the sensor.
@@ -54,6 +62,13 @@ void calibrate() {  // Calibrate the ambient capacitance values for the sensor.
 }
 
 void loop() {
+  if(Serial2.available()){
+    Serial.print("----------BLUETOOTH ON-------");
+    Serial2.read();
+    btConn = true;
+  }
+//  if(btConn)
+  //  Serial2.print(". ");
   // Get sensor readings
   Sensor sensors[8];
   bool buttons[4];
@@ -73,35 +88,41 @@ void loop() {
         if(sensors[6].binaryReading == true){
           Mouse.click(MOUSE_MIDDLE);
           Serial.print("M");printCS(0);
-          Serial2.print("M");
+          if(btConn)
+            butIn = 'M';
         }
         else {
         Mouse.click(MOUSE_LEFT);
         Serial.print("L");printCS(0);
-        Serial2.print("L");
+        if(btConn)
+          butIn = 'L';
         }
       }
       else if(sensors[6].binaryReading == true){
         Mouse.click(MOUSE_RIGHT);
         Serial.print("R");printCS(0);
-        Serial2.print("R");
+        if(btConn)
+          butIn = 'R';
       }
       else if(sensors[0].binaryReading == true){
         Mouse.move(0, 0, 3);
         buttonType = 1;
         Serial.print("U");printCS(0);
-        Serial2.print("U");
+        if(btConn)
+          butIn = 'U';
       }
       else if(sensors[4].binaryReading == true){
         Mouse.move(0, 0, -3);
         buttonType = 2;
         Serial.print("D");printCS(0);
-        Serial2.print("D");
+        if(btConn)
+          butIn = 'D';
       }
       else {
         Mouse.click(MOUSE_LEFT);
         Serial.print("L");printCS(0);
-        Serial2.print("L");
+        if(btConn)
+          butIn = 'L';
       }
     }
     else {
@@ -112,20 +133,37 @@ void loop() {
     if(buttonType == 1){
       Mouse.move(0, 0, 3);
       Serial.print("U");printCS(0);
-      Serial2.print("U");printCS(2);
+      if(btConn)
+        butIn = 'U';
     }
     else if(buttonType == 2){
       Mouse.move(0, 0, -3); 
       Serial.print("D");printCS(0);
-      Serial2.print("D");printCS(2);   
+      if(btConn)
+        butIn = 'D';
     }
     else {
       Serial.print("0");printCS(0);
-      Serial2.print("0");printCS(2);
+      if(btConn)
+        butIn = '0';
     }
   }
   mouseAlgorithm(sensors,buttons);
-  delay(16);
+
+  //Checking packets/second
+  /*
+  if((millis() - startTime) < 10000){
+    packets++;
+  }
+  if((startTime + millis()) > 10000){
+    Serial.println("");
+    Serial.print("Total Packets: ");
+    Serial.println(packets);
+    Serial.print("Packets/Second: ");
+    Serial.println((float)packets/10);
+  }
+  */
+  delay(15);
 }
 
 void mouseAlgorithm(Sensor * sensors,bool * buttons){
@@ -137,6 +175,7 @@ void mouseAlgorithm(Sensor * sensors,bool * buttons){
 }
 
 Direction getDirection(float angle,bool activated){
+  float c = angle;
   Direction dir;
   dir.x=0.0;
   dir.y=0.0;
@@ -153,8 +192,16 @@ Direction getDirection(float angle,bool activated){
     dir.x=UNIT*sin(angle);
     }
   }
-  Serial2.print(dir.x);printCS(2);
-  Serial2.print(dir.y);printCS(2);
+  if(btConn && ((dir.y != 0)||(dir.x != 0)||(butIn != '0'))){
+    int denom = c/22.5;
+    Serial.print("--");Serial.print(denom);Serial.print("---");
+    Serial2.print(butIn);printS(2);
+    Serial2.print(denom);
+    //Serial2.print(dir.x);printS(2);
+    //Serial2.print(dir.y);
+    Serial2.print("\n");
+    butIn = '0';
+  }
   return dir;
 }
 
@@ -267,6 +314,10 @@ void printLN(int arg){   //Print newline
  else if(arg==2)
    Serial2.print("\n");
 }
-
-
+void printS(int arg){
+  if(arg==0)
+    Serial.print(" ");
+  else if(arg == 2)
+    Serial2.print(" ");
+}
 
