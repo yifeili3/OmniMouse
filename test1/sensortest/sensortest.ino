@@ -33,8 +33,8 @@ typedef struct touchQueue{
 void setup() {
   pinMode(13, OUTPUT);    //Set LED to output
   pinMode(buttonPin,INPUT_PULLUP);
-  Serial.begin(9600);
-  Serial2.begin(9600);
+  Serial.begin(38400);
+  Serial2.begin(57600);
   calibrate();
   Mouse.begin();
 }
@@ -65,12 +65,10 @@ void loop() {
      else
       sensors[i].binaryReading =false;
     sensors[i].CapacitiveReading = (val-defVal[i]); 
-    // space for button reading
   }
-  bool buttonPressed=false;
+  int buttonType = 0;
   if(pushbutton.update()){
     if(pushbutton.risingEdge()){
-      buttonPressed=true;
       if(sensors[2].binaryReading == true){
         if(sensors[6].binaryReading == true){
           Mouse.click(MOUSE_MIDDLE);
@@ -83,51 +81,106 @@ void loop() {
         Serial2.print("L");printCS(2);
         }
       }
+      else if(sensors[6].binaryReading == true){
+        Mouse.click(MOUSE_RIGHT);
+        Serial.print("R");printCS(0);
+        Serial2.print("R");printCS(2);
+      }
+      else if(sensors[0].binaryReading == true){
+        Mouse.move(0, 0, 3);
+        buttonType = 1;
+        Serial.print("U");printCS(0);
+        Serial2.print("U");printCS(2);
+      }
+      else if(sensors[4].binaryReading == true){
+        Mouse.move(0, 0, -3);
+        buttonType = 2;
+        Serial.print("D");printCS(0);
+        Serial2.print("D");printCS(2);
+      }
     }
-    else if(sensors[6].binaryReading == true){
-      Mouse.click(MOUSE_RIGHT);
-      Serial.print("R");printCS(0);
-      Serial2.print("R");printCS(2);
+    else {
+      buttonType = 0;
     }
-    else if(sensors[0].binaryReading == true){
+  }
+  else{
+    if(buttonType == 1){
       Mouse.move(0, 0, 3);
       Serial.print("U");printCS(0);
       Serial2.print("U");printCS(2);
     }
-    else if(sensors[4].binaryReading == true){
-      Mouse.move(0, 0, -3);
+    else if(buttonType == 2){
+      Mouse.move(0, 0, -3); 
       Serial.print("D");printCS(0);
-      Serial2.print("D");printCS(2);
+      Serial2.print("D");printCS(2);   
     }
-    else{
+    else {
       Serial.print("0");printCS(0);
       Serial2.print("0");printCS(2);
     }
   }
-  //printValues(sensors,8);
-  mouseAlgorithm(sensors,buttons);
-  delay(20);
-}
-/*
-void printValues(Sensor * sensors, int num) {
-  for(int i = 0; i < num; i++){
-    Serial.print(sensors[i].CapacitiveReading);
-    printCS(0);
+  /*
+  if(pushbutton.update()){
+    if(pushbutton.risingEdge()){
+      if((sensors[2].binaryReading == true) && (sensors[6].binaryReading == true)){
+          Mouse.click(MOUSE_MIDDLE);
+          Serial.print("M");printCS(0);
+          Serial2.print("M");printCS(2);
+      }
+      else if(sensors[2].binaryReading == true){
+        Mouse.click(MOUSE_LEFT);
+        Serial.print("L");printCS(0);
+        Serial2.print("L");printCS(2);
+      }
+      else if(sensors[6].binaryReading == true){
+        Mouse.click(MOUSE_RIGHT);
+        Serial.print("R");printCS(0);
+        Serial2.print("R");printCS(2);
+      }
+      else if(sensors[0].binaryReading == true){
+        Mouse.move(0, 0, 3);
+        buttonType = 1;
+        Serial.print("U");printCS(0);
+        Serial2.print("U");printCS(2);
+      }
+      else if(sensors[4].binaryReading == true){
+        Mouse.move(0, 0, -3);
+        buttonType = 2;
+        Serial.print("D");printCS(0);
+        Serial2.print("D");printCS(2);
+      }
+    }
+    else {
+      buttonType = 0;
+      Serial.println("RELEASED---");
+    }
   }
-  printLN(0);
+  else {
+    if(buttonType == 1){
+      Mouse.move(0, 0, 3);
+      Serial.print("U");printCS(0);
+      Serial2.print("U");printCS(2);
+    }
+    else if(buttonType == 2){
+      Mouse.move(0, 0, -3);
+      Serial.print("D");printCS(0);
+      Serial2.print("D");printCS(2);
+    }
+    else {
+      Serial.print("0");printCS(0);
+      Serial2.print("0");printCS(2); 
+    }
+  }*/
+  mouseAlgorithm(sensors,buttons);
+  delay(16);
 }
-*/
+
 void mouseAlgorithm(Sensor * sensors,bool * buttons){
-    //mouse move
     bool activated=false;
     float angle = AngleCalculation(sensors,activated);
     Serial.print(angle);printCS(0);
-    Serial2.print(angle);printCS(2);
     Direction mouseDir=getDirection(angle,activated);
     if(mouseDir.x!=0 || mouseDir.y!=0) Mouse.move(mouseDir.x,mouseDir.y);
-    //TODO button control
-   
-    
 }
 
 Direction getDirection(float angle,bool activated){
@@ -214,16 +267,12 @@ float Vote(sensor s1, sensor s2, float * degreeArray){
 
 float AngleCalculation(Sensor * sensors, bool & activated){
       printValues(sensors,8);
-      printValuesB(sensors,8);
       
       TouchQueue res=findLargestThree(sensors);
       Serial.print(res.s1.sensorNum);printCS(0);
       Serial.print(res.s2.sensorNum);printCS(0);
       Serial.print(res.s3.sensorNum);printCS(0);
-      
-      Serial2.print(res.s1.sensorNum);printCS(2);
-      Serial2.print(res.s2.sensorNum);printCS(2);
-      Serial2.print(res.s3.sensorNum);printCS(2);
+
       float angle=0.0;
       
       float degreeArray[8]={0.0,45.0,90.0,135.0,180.0,225.0,270.0,315.0};
@@ -243,6 +292,7 @@ float AngleCalculation(Sensor * sensors, bool & activated){
       }
       return angle;
 }
+//Print formatting functions
 
 void printValues(Sensor* sensors, int num) {
   for(int i = 0; i < num; i++){
@@ -250,14 +300,6 @@ void printValues(Sensor* sensors, int num) {
     printCS(0);
   }
   printLN(0);
-}
-
-void printValuesB(Sensor* sensors, int num) {
-  for(int i = 0; i < num; i++){
-    Serial2.print(sensors[i].binaryReading);
-    printCS(2);
-  }
-  printLN(2);
 }
 
 void printCS(int arg){   //Print comma + space
@@ -272,7 +314,3 @@ void printLN(int arg){   //Print newline
  else if(arg==2)
    Serial2.print("\n");
 }
-
-
-
-
